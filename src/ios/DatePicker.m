@@ -56,19 +56,29 @@
         [self.datePickerSheet dismissWithClickedButtonIndex:0 animated:YES];
     } else {
         [self.datePickerPopover dismissPopoverAnimated:YES];
+        [self.datePickerPopover.delegate popoverControllerDidDismissPopover:self.datePickerPopover];
     }
 }
 
 - (void)doneAction:(id)sender {
   [self jsDateSelected];
-  [self hide];
+    
+    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
+        [self.datePickerSheet dismissWithClickedButtonIndex:0 animated:YES];
+    } else {
+        [self.datePickerPopover dismissPopoverAnimated:YES];
+        [self.datePickerPopover.delegate popoverControllerDidDismissPopover:self.datePickerPopover];
+    }
 }
-
 
 - (void)cancelAction:(id)sender {
-  [self hide];
+    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
+        [self.datePickerSheet dismissWithClickedButtonIndex:0 animated:YES];
+    } else {
+        [self.datePickerPopover dismissPopoverAnimated:YES];
+        [self.datePickerPopover.delegate popoverControllerDidDismissPopover:self.datePickerPopover];
+    }
 }
-
 
 - (void)dateChangedAction:(id)sender {
   [self jsDateSelected];
@@ -131,17 +141,26 @@
 
 - (UIPopoverController *)createPopover:(NSMutableDictionary *)options {
     
-  CGFloat pickerViewWidth = 320.0f;
-  CGFloat pickerViewHeight = 216.0f;
+  CGFloat pickerViewWidth = 400.0f;
+  CGFloat pickerViewHeight = 250.0f;
   UIView *datePickerView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, pickerViewWidth, pickerViewHeight)];
 
-  CGRect frame = CGRectMake(0, 0, 0, 0);
+  CGRect frame = CGRectMake(0, 0, 400.0f, 220.0f);
   if(!self.datePicker){
     self.datePicker = [self createDatePicker:options frame:frame];
     [self.datePicker addTarget:self action:@selector(dateChangedAction:) forControlEvents:UIControlEventValueChanged];    
   }
   [self updateDatePicker:options]; 
   [datePickerView addSubview:self.datePicker];
+    
+    UISegmentedControl *cancelButton = [self createCancelButton:options];
+    [datePickerView addSubview:cancelButton];
+    // done button
+    UISegmentedControl *doneButton = [self createDoneButton:options];
+    [datePickerView addSubview:doneButton];
+    
+    
+    
 
   UIViewController *datePickerViewController = [[UIViewController alloc]init];
   datePickerViewController.view = datePickerView;
@@ -149,11 +168,11 @@
   UIPopoverController *popover = [[UIPopoverController alloc] initWithContentViewController:datePickerViewController];
   popover.delegate = self;
   [popover setPopoverContentSize:CGSizeMake(pickerViewWidth, pickerViewHeight) animated:NO];
-  
-  CGFloat x = [[options objectForKey:@"x"] intValue];
-  CGFloat y = [[options objectForKey:@"y"] intValue];
+    
+    CGFloat x = (self.webView.frame.size.width/2);   // [[options objectForKey:@"x"] intValue];
+    CGFloat y = (self.webView.frame.size.height/2);  // [[options objectForKey:@"y"] intValue];
   CGRect anchor = CGRectMake(x, y, 1, 1);
-  [popover presentPopoverFromRect:anchor inView:self.webView.superview  permittedArrowDirections:UIPopoverArrowDirectionAny animated:YES];   
+  [popover presentPopoverFromRect:anchor inView:self.webView.superview  permittedArrowDirections:NULL animated:YES];
   
   return popover;
 }
@@ -229,7 +248,7 @@
   button.apportionsSegmentWidthsByContent = YES;
   
   CGSize size = button.bounds.size;
-  button.frame = CGRectMake(5, 7.0f, size.width, size.height);
+  button.frame = CGRectMake(10, 250 - size.height -10, size.width, size.height);
   
   [button addTarget:self action:@selector(cancelAction:) forControlEvents:UIControlEventValueChanged];
     
@@ -249,8 +268,8 @@
   CGSize size = button.bounds.size;
   CGFloat width = size.width;
   CGFloat height = size.height;
-  CGFloat xPos = 320 - width - 5; // 320 == width of DatePicker, 5 == offset to right side hand
-  button.frame = CGRectMake(xPos, 7.0f, width, height);
+  CGFloat xPos = 400 - width - 10; // 320 == width of DatePicker, 5 == offset to right side hand
+  button.frame = CGRectMake(xPos, 250 - size.height -10, width, height);
   
   [button addTarget:self action:@selector(doneAction:) forControlEvents:UIControlEventValueChanged];
 
